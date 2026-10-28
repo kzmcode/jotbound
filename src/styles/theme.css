@@ -1,0 +1,93 @@
+/* AURA design tokens. Import once in the app's global stylesheet.
+ * AURA is a design codename, not a requirement to rename the app.
+ * Theme selection: html[data-theme="light"|"dark"] overrides OS;
+ * remove data-theme or use data-theme="system" to follow OS.
+ */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --aura-bg: #EFF0FA;
+  --aura-surface: #FCFCFF;
+  --aura-surface-subtle: #F7F7FF;
+  --aura-text: #30314C;
+  --aura-text-secondary: #66678A;
+  --aura-accent: #746FC4;
+  --aura-accent-strong: #665FB5;
+  --aura-accent-foreground: #FFFFFF;
+  --aura-halo-outer: #DADCF6;
+  --aura-halo-inner: #C0BDF0;
+  --aura-border: #DDDDF0;
+  --aura-focus: #625CB2;
+  --aura-success: #347563;
+  --aura-error: #AD4758;
+  --aura-glass: rgba(252, 252, 255, 0.82);
+  --aura-glass-border: rgba(255, 255, 255, 0.80);
+  --aura-shadow-rgb: 54, 50, 100;
+  --aura-shadow-alpha: 0.10;
+  --aura-ambient-rgb: 160, 150, 241;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --aura-bg: #151728;
+  --aura-surface: #25283D;
+  --aura-surface-subtle: #1E2135;
+  --aura-text: #F5F3FF;
+  --aura-text-secondary: #B8B9D3;
+  --aura-accent: #A9A1FF;
+  --aura-accent-strong: #A9A1FF;
+  --aura-accent-foreground: #1E2037;
+  --aura-halo-outer: #38395E;
+  --aura-halo-inner: #6461A4;
+  --aura-border: #434560;
+  --aura-focus: #C6BEFF;
+  --aura-success: #9BDCC0;
+  --aura-error: #FFA6B2;
+  --aura-glass: rgba(37, 40, 61, 0.84);
+  --aura-glass-border: rgba(169, 161, 255, 0.20);
+  --aura-shadow-rgb: 0, 0, 0;
+  --aura-shadow-alpha: 0.26;
+  --aura-ambient-rgb: 145, 125, 251;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+    --aura-bg: #151728;
+    --aura-surface: #25283D;
+    --aura-surface-subtle: #1E2135;
+    --aura-text: #F5F3FF;
+    --aura-text-secondary: #B8B9D3;
+    --aura-accent: #A9A1FF;
+    --aura-accent-strong: #A9A1FF;
+    --aura-accent-foreground: #1E2037;
+    --aura-halo-outer: #38395E;
+    --aura-halo-inner: #6461A4;
+    --aura-border: #434560;
+    --aura-focus: #C6BEFF;
+    --aura-success: #9BDCC0;
+    --aura-error: #FFA6B2;
+    --aura-glass: rgba(37, 40, 61, 0.84);
+    --aura-glass-border: rgba(169, 161, 255, 0.20);
+    --aura-shadow-rgb: 0, 0, 0;
+    --aura-shadow-alpha: 0.26;
+    --aura-ambient-rgb: 145, 125, 251;
+  }
+}
+:root {
+  --aura-font-ui: Inter, -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  --aura-font-quote: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  --aura-space-1: 4px;
+  --aura-space-2: 8px;
+  --aura-space-3: 12px;
+  --aura-space-4: 16px;
+  --aura-space-5: 20px;
+  --aura-space-6: 24px;
+  --aura-space-8: 32px;
+  --aura-radius-sm: 12px;
+  --aura-radius-md: 18px;
+  --aura-radius-lg: 24px;
+  --aura-radius-pill: 999px;
+  --aura-content-max: 560px;
+  --aura-transition-fast: 160ms;
+  --aura-transition-default: 240ms;
+  --aura-pulse-duration: 2400ms;
+}

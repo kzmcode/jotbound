@@ -1,0 +1,69 @@
+{
+  "name": "jotbound",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.22.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:rules": "node scripts/set-owner.mjs --build --no-owners --out .e2e/firestore.rules && firebase emulators:exec --config firebase.e2e.json --only firestore --project demo-jotbound \"vitest run --config vitest.rules.config.ts\"",
+    "test:e2e": "node scripts/set-owner.mjs --build --no-owners --out .e2e/firestore.rules && firebase emulators:exec --config firebase.e2e.json --only auth,firestore --project demo-jotbound \"playwright test\"",
+    "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "owner:set": "node scripts/set-owner.mjs",
+    "rules:build": "node scripts/set-owner.mjs --build",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
+    "deploy": "npm run doctor && npm run check:secrets && npm run rules:build && npm run build && firebase deploy --only hosting,firestore",
+    "deploy:rules": "npm run doctor && npm run rules:build && firebase deploy --only firestore",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "firebase": "^13.1.0",
+    "idb": "^8.0.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router": "^8.5.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "eslint": "^10.13.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "fake-indexeddb": "^6.2.5",
+    "firebase-tools": "^15.34.1",
+    "globals": "^17.13.0",
+    "jsdom": "^30.1.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.5",
+    "workbox-window": "^7.4.1"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6",
+    "uuid": "^11.1.1"
+  }
+}

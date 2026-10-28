@@ -1,0 +1,137 @@
+rules_version = '2';
+
+// Jotbound Firestore Security Rules（要件定義書 4章・5章）
+// - デフォルト拒否。users/{uid}/ 以下を、ログインした本人（かつ許可された所有者）だけが操作できる。
+// - 文書ごとに許可フィールド・必須フィールド・型・文字数を検証する。上限値は src/types/models.ts の LIMITS と一致させる。
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- 所有者の限定（要件 5-3） ----
+    // このファイルでは常に空リストにしておく（空なら「ログインした本人のデータのみ」）。
+    // 所有者は `npm run owner:set -- <UID>` で .env.local の OWNER_UIDS に保存し、
+    // `npm run deploy` / `npm run deploy:rules` のときに .deploy/firestore.rules へ差し込んでデプロイする。
+    function allowedOwners() {
+      return []; // OWNER_UIDS
+    }
+
+    function isOwner(uid) {
+      return request.auth != null
+        && request.auth.uid == uid
+        && (allowedOwners().size() == 0 || uid in allowedOwners());
+    }
+
+    // ---- 型ヘルパー ----
+    function isStr(v, min, max) {
+      return v is string && v.size() >= min && v.size() <= max;
+    }
+    function isNullableStr(v, max) {
+      return v == null || isStr(v, 0, max);
+    }
+    function isNullablePage(v) {
+      return v == null || (v is int && v >= 1 && v <= 100000);
+    }
+    function isIdList(v, max) {
+      return v is list && v.size() <= max && v.toSet().size() == v.size();
+    }
+    // 空白（全角スペース・ノーブレークスペースを含む）以外の文字を1つ以上含む
+    function hasText(s) {
+      return s.matches('(?s).*[^\\s\\x{3000}\\x{00A0}].*');
+    }
+    function hasExactly(d, fields) {
+      return d.keys().hasOnly(fields) && d.keys().hasAll(fields);
+    }
+
+    // updatedAt はサーバー時刻、createdAt は作成時に過去の時刻（JSON復元を許容）・更新時は不変
+    function timestampsOk() {
+      let d = request.resource.data;
+      return d.updatedAt == request.time
+        && d.createdAt is timestamp
+        && (resource == null
+              ? d.createdAt <= request.time
+              : d.createdAt == resource.data.createdAt);
+    }
+
+    // ---- books/{bookId} ----
+    // 書影は信頼できる提供元（Google Books / Open Library）の https のみ（要件 5-9）
+    function isTrustedCover(url) {
+      return isStr(url, 1, 2000)
+        && url.matches('https://(books\\.google\\.com|books\\.googleusercontent\\.com|covers\\.openlibrary\\.org)/.*');
+    }
+    function validCover(d) {
+      return (d.coverProvider == 'none' && d.coverUrl == null)
+        || (d.coverProvider in ['google', 'openlibrary', 'manual'] && isTrustedCover(d.coverUrl));
+    }
+
+    function validBook(d) {
+      return hasExactly(d, ['title', 'titleNormalized', 'aliases', 'authors', 'isbn13', 'publisher',
+                            'coverUrl', 'coverProvider', 'externalSourceId', 'readingStatus',
+                            'createdAt', 'updatedAt'])
+        && isStr(d.title, 1, 200) && hasText(d.title)
+        && isStr(d.titleNormalized, 1, 200)
+        && d.aliases is list && d.aliases.size() <= 10
+        && d.authors is list && d.authors.size() <= 20
+        && (d.isbn13 == null || (d.isbn13 is string && d.isbn13.matches('97[89][0-9]{10}')))
+        && isNullableStr(d.publisher, 200)
+        && validCover(d)
+        && isNullableStr(d.externalSourceId, 200)
+        && d.readingStatus in ['unread', 'reading', 'finished'];
+    }
+
+    // ---- notes/{noteId} ----
+    function validNote(uid, d) {
+      return hasExactly(d, ['bookId', 'pageStart', 'pageEnd', 'quote', 'comment', 'transcript',
+                            'topicTagIds', 'usageTagIds', 'usageStatus', 'inputMethod',
+                            'createdAt', 'updatedAt', 'schemaVersion'])
+        && isStr(d.bookId, 1, 128)
+        && exists(/databases/$(database)/documents/users/$(uid)/books/$(d.bookId))
+        && isNullablePage(d.pageStart)
+        && isNullablePage(d.pageEnd)
+        && (d.pageEnd == null || (d.pageStart != null && d.pageEnd >= d.pageStart))
+        && isStr(d.quote, 0, 5000)
+        && isStr(d.comment, 0, 5000)
+        && (hasText(d.quote) || hasText(d.comment))
+        && isNullableStr(d.transcript, 20000)
+        && isIdList(d.topicTagIds, 10)
+        && isIdList(d.usageTagIds, 10)
+        && d.usageStatus in ['unassigned', 'planned', 'used']
+        && d.inputMethod in ['voice', 'manual']
+        && d.schemaVersion == 1;
+    }
+
+    // ---- tags/{tagId} ----
+    function validTag(d) {
+      return hasExactly(d, ['name', 'normalizedName', 'category', 'createdAt', 'updatedAt'])
+        && isStr(d.name, 1, 50) && hasText(d.name)
+        && isStr(d.normalizedName, 1, 50)
+        && d.category in ['topic', 'usage'];
+    }
+
+    // ---- settings/profile ----
+    function validProfile(d) {
+      return hasExactly(d, ['preferredModel', 'preferredBookId', 'schemaVersion', 'updatedAt'])
+        && d.preferredModel == 'gemini-3.5-flash-lite'
+        && isNullableStr(d.preferredBookId, 128)
+        && d.schemaVersion == 1
+        && d.updatedAt == request.time;
+    }
+
+    match /users/{uid} {
+      match /books/{bookId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validBook(request.resource.data) && timestampsOk();
+      }
+      match /notes/{noteId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validNote(uid, request.resource.data) && timestampsOk();
+      }
+      match /tags/{tagId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validTag(request.resource.data) && timestampsOk();
+      }
+      match /settings/{docId} {
+        allow get: if isOwner(uid) && docId == 'profile';
+        allow create, update: if isOwner(uid) && docId == 'profile' && validProfile(request.resource.data);
+      }
+    }
+  }
+}

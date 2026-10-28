@@ -1,0 +1,4 @@
+#!/bin/sh
+# コミットする内容に秘密情報や公開してはいけないファイルが含まれていないかを調べる。
+# npm install（prepare）で git config core.hooksPath .githooks が設定され、有効になる。
+exec node scripts/check-secrets.mjs --staged

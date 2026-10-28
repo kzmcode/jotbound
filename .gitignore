@@ -1,0 +1,45 @@
+# 依存関係・ビルド成果物
+node_modules/
+dist/
+dev-dist/
+.deploy/
+*.tsbuildinfo
+
+# 環境変数（Firebase の設定・所有者 UID など）。ひな形と E2E 用だけ公開する
+.env
+.env.*
+*.local
+!.env.example
+!.env.e2e
+
+# Firebase（実在のプロジェクト ID・デプロイのキャッシュ・Emulator のデータ）
+.firebaserc
+.firebase/
+firebase-export-*/
+
+# 鍵・認証情報
+service-account*.json
+*-firebase-adminsdk-*.json
+*.pem
+*.p12
+
+# ログ
+*.log
+
+# テスト
+coverage/
+playwright-report/
+test-results/
+.e2e/
+
+# エディタ・OS・ツールの個人設定
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+.claude/settings.local.json
+
+# 要件定義書・デザイン資料・実装計画・ポートフォリオ素材（非公開）
+ref/
+portfolio/

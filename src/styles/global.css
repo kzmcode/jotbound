@@ -1,0 +1,204 @@
+@import 'tailwindcss';
+@import './theme.css';
+
+/* theme.css の変数を Tailwind のユーティリティ名に対応付ける（色の一次情報は theme.css）。 */
+@theme inline {
+  --color-bg: var(--aura-bg);
+  --color-surface: var(--aura-surface);
+  --color-surface-subtle: var(--aura-surface-subtle);
+  --color-text: var(--aura-text);
+  --color-text-secondary: var(--aura-text-secondary);
+  --color-accent: var(--aura-accent);
+  --color-accent-strong: var(--aura-accent-strong);
+  --color-accent-fg: var(--aura-accent-foreground);
+  --color-halo-outer: var(--aura-halo-outer);
+  --color-halo-inner: var(--aura-halo-inner);
+  --color-border: var(--aura-border);
+  --color-focus: var(--aura-focus);
+  --color-success: var(--aura-success);
+  --color-error: var(--aura-error);
+  --color-glass: var(--aura-glass);
+  --color-glass-border: var(--aura-glass-border);
+  --font-ui: var(--aura-font-ui);
+  --font-quote: var(--aura-font-quote);
+  --radius-sm: var(--aura-radius-sm);
+  --radius-md: var(--aura-radius-md);
+  --radius-lg: var(--aura-radius-lg);
+  --radius-pill: var(--aura-radius-pill);
+  --container-content: var(--aura-content-max);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    background: var(--aura-bg);
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--aura-bg);
+    color: var(--aura-text);
+    font-family: var(--aura-font-ui);
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 3px solid var(--aura-focus);
+    outline-offset: 3px;
+  }
+  button:not(:disabled),
+  [role='button'] {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* 柔らかい環境光（装飾。本文の背後には置かない位置・強さに抑える） */
+  .ambient-glow {
+    position: fixed;
+    inset: 0 0 auto;
+    height: 520px;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(
+      ellipse 420px 400px at 50% 210px,
+      rgba(var(--aura-ambient-rgb), 0.19),
+      rgba(var(--aura-ambient-rgb), 0) 68%
+    );
+    opacity: 0.72;
+  }
+
+  /* ガラス感は補助。backdrop-filter 非対応でも --aura-glass 自体が十分不透明 */
+  .glass {
+    background: var(--aura-glass);
+    border: 1px solid var(--aura-glass-border);
+    box-shadow: 0 16px 40px rgba(var(--aura-shadow-rgb), var(--aura-shadow-alpha));
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .glass {
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+    }
+  }
+
+  .eyebrow {
+    font-size: 10px;
+    line-height: 1.5;
+    letter-spacing: 0.19em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--aura-text-secondary);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Voice Capture Orb: 外径208 / 内径158 / ボタン92（390px幅の目安） */
+  .orb-halo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    flex: none;
+  }
+  .orb-outer {
+    width: 208px;
+    height: 208px;
+    background: var(--aura-halo-outer);
+    box-shadow: 0 22px 70px rgba(var(--aura-shadow-rgb), 0.07);
+  }
+  .orb-inner {
+    width: 158px;
+    height: 158px;
+    background: var(--aura-halo-inner);
+  }
+  .orb-button {
+    width: 92px;
+    height: 92px;
+    border: 0;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--aura-accent);
+    color: var(--aura-accent-foreground);
+    box-shadow: 0 13px 26px rgba(var(--aura-shadow-rgb), 0.15);
+    transition:
+      transform var(--aura-transition-fast) ease,
+      background-color var(--aura-transition-fast) ease;
+  }
+  .orb-button:hover {
+    transform: scale(1.04);
+  }
+  .orb-button:active {
+    transform: scale(0.96);
+  }
+  .orb-button:focus-visible {
+    outline-offset: 6px;
+  }
+  /* 録音が実際に開始されたときだけ外側2円を脈動させる（data-live="true"） */
+  .orb[data-live='true'] .orb-outer {
+    animation: orb-pulse var(--aura-pulse-duration) ease-in-out infinite;
+  }
+  .orb[data-live='true'] .orb-inner {
+    animation: orb-pulse var(--aura-pulse-duration) ease-in-out infinite 300ms;
+  }
+  @keyframes orb-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.04);
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--aura-surface-subtle),
+      var(--aura-border),
+      var(--aura-surface-subtle)
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+  @keyframes skeleton-shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+
+  .screen-enter {
+    animation: screen-enter var(--aura-transition-default) ease-out;
+  }
+  @keyframes screen-enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
