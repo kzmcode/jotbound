@@ -8,7 +8,7 @@ import {
   signInWithRedirect,
   signOut,
 } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, getDocFromCache, serverTimestamp, setDoc } from 'firebase/firestore';
 import { AI_MODEL } from '../../app/config';
 import { SCHEMA_VERSION } from '../../types/models';
 import { getFirebase, type FirebaseServices } from './app';
@@ -88,6 +88,19 @@ export async function emulatorSignIn(email: string, displayName: string): Promis
 
 export async function signOutUser(): Promise<void> {
   await signOut(services().auth);
+}
+
+/**
+ * 端末内キャッシュに settings/profile があるか（＝この端末で所有者確認を通過したことがある）。
+ * 起動時はこれで先にアプリを表示し、サーバーでの確認（verifyAccess）は裏で行う。
+ */
+export async function hasCachedAccess(uid: string): Promise<boolean> {
+  const { db } = services();
+  try {
+    return (await getDocFromCache(doc(db, 'users', uid, 'settings', 'profile'))).exists();
+  } catch {
+    return false;
+  }
 }
 
 /**

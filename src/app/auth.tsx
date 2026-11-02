@@ -38,11 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         setState({ status: 'checking', user });
+        // 確認済みの端末ではキャッシュで即座に表示する（サーバー往復・App Check のトークン取得を待たない）
+        void session.hasCachedAccess(user.uid).then((cached) => {
+          if (!cached) return;
+          setState((prev) => (prev.status === 'checking' && prev.user.uid === user.uid ? { status: 'signedIn', user } : prev));
+        });
         void session.verifyAccess(user.uid).then((access) => {
+          const status = access === 'allowed' ? 'signedIn' : 'forbidden';
           setState((prev) =>
-            'user' in prev && prev.user.uid === user.uid
-              ? { status: access === 'allowed' ? 'signedIn' : 'forbidden', user }
-              : prev,
+            'user' in prev && prev.user.uid === user.uid && prev.status !== status ? { status, user } : prev,
           );
         });
       });
